@@ -1,3 +1,8 @@
+<<<<<<< HEAD
 *.log
 *.tmp
+=======
+*.log
+*.tmp
+>>>>>>> 728c61b (Initial commit)
 *.bak

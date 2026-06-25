@@ -1,0 +1,12 @@
+{
+    "version":  1,
+    "generatedAt":  "2026-06-25T03:03:25Z",
+    "files":  [
+                  {
+                      "name":  "answer.png",
+                      "path":  "images/answer.png",
+                      "size":  325081,
+                      "sha256":  "5e3e61bb6692010857208d8a90d128a3c987116887ee0e536ef117dd1ba709ce"
+                  }
+              ]
+}
