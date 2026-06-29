@@ -1,12 +1,18 @@
 {
     "version":  1,
-    "generatedAt":  "2026-06-29T07:06:43Z",
+    "generatedAt":  "2026-06-29T07:08:20Z",
     "files":  [
                   {
                       "name":  "answer.png",
                       "path":  "images/answer.png",
                       "size":  325081,
                       "sha256":  "5e3e61bb6692010857208d8a90d128a3c987116887ee0e536ef117dd1ba709ce"
+                  },
+                  {
+                      "name":  "end.png",
+                      "path":  "images/end.png",
+                      "size":  315701,
+                      "sha256":  "147b18f9af4d62f66acc3c8992c3056e2cf7a7dec5d6708d26d549d6c3b7afa9"
                   }
               ]
 }
