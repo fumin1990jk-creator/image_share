@@ -1,0 +1,157 @@
+﻿<!doctype html>
+<html lang="ja">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Text Share</title>
+  <style>
+    body {
+      font-family: sans-serif;
+      max-width: 720px;
+      margin: 24px auto;
+      padding: 0 16px;
+    }
+    label {
+      display: block;
+      margin-top: 16px;
+      font-weight: bold;
+    }
+    input, textarea, button {
+      width: 100%;
+      box-sizing: border-box;
+      font-size: 16px;
+      padding: 12px;
+      margin-top: 8px;
+    }
+    textarea {
+      min-height: 180px;
+      resize: vertical;
+    }
+    button {
+      margin-top: 20px;
+      cursor: pointer;
+    }
+    .status {
+      margin-top: 16px;
+      font-weight: bold;
+    }
+    .note {
+      color: #666;
+      font-size: 14px;
+      margin-top: 12px;
+    }
+  </style>
+</head>
+<body>
+  <h1>Text Share</h1>
+
+  <form id="postForm">
+    <label for="name">名前</label>
+    <input type="text" id="name" name="name" autocomplete="off" required>
+
+    <label for="content">内容</label>
+    <textarea id="content" name="content" required></textarea>
+
+    <button type="submit">送信</button>
+  </form>
+
+  <div id="status" class="status"></div>
+  <p class="note">送信後、名前は保持され、内容だけクリアされます。</p>
+
+  <script>
+    const OWNER = "fumin1990jk-creator";
+    const REPO = "image_share";
+    const BRANCH = "main";
+    const TOKEN = "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";
+
+    const nameInput = document.getElementById('name');
+    const contentInput = document.getElementById('content');
+    const form = document.getElementById('postForm');
+    const statusEl = document.getElementById('status');
+
+    const savedName = localStorage.getItem('savedName');
+    if (savedName) nameInput.value = savedName;
+
+    nameInput.addEventListener('input', () => {
+      localStorage.setItem('savedName', nameInput.value);
+    });
+
+    function sanitizeFileName(s) {
+      return s.trim().replace(/[\\\/:*?"<>|]/g, '_').replace(/\s+/g, '_');
+    }
+
+    function toBase64Utf8(str) {
+      return btoa(unescape(encodeURIComponent(str)));
+    }
+
+    async function githubFetch(url, options = {}) {
+      return fetch(url, {
+        ...options,
+        headers: {
+          'Authorization': `Bearer ${TOKEN}`,
+          'Accept': 'application/vnd.github+json',
+          'Content-Type': 'application/json',
+          ...(options.headers || {})
+        }
+      });
+    }
+
+    async function fileExists(path) {
+      const url = `https://api.github.com/repos/${OWNER}/${REPO}/contents/${path}?ref=${BRANCH}`;
+      const res = await githubFetch(url, { method: 'GET' });
+      return res.status === 200;
+    }
+
+    async function getNextFileName(baseName) {
+      const safe = sanitizeFileName(baseName);
+      let fileName = `${safe}.txt`;
+      let v = 2;
+      while (await fileExists(`docs/txt/${fileName}`)) {
+        fileName = `${safe}_v${v}.txt`;
+        v++;
+      }
+      return fileName;
+    }
+
+    async function createFile(path, content, message) {
+      const url = `https://api.github.com/repos/${OWNER}/${REPO}/contents/${path}`;
+      const res = await githubFetch(url, {
+        method: 'PUT',
+        body: JSON.stringify({
+          message,
+          content: toBase64Utf8(content),
+          branch: BRANCH
+        })
+      });
+
+      if (!res.ok) {
+        const text = await res.text();
+        throw new Error(`${res.status} ${res.statusText}: ${text}`);
+      }
+    }
+
+    form.addEventListener('submit', async (e) => {
+      e.preventDefault();
+
+      const name = nameInput.value.trim();
+      const content = contentInput.value.trim();
+      if (!name || !content) return;
+
+      statusEl.textContent = '送信中...';
+
+      try {
+        const fileName = await getNextFileName(name);
+        const text = `name: ${name}\n\n${content}\n`;
+        await createFile(`docs/txt/${fileName}`, text, `Add ${fileName}`);
+
+        statusEl.textContent = `作成完了: ${fileName}`;
+        contentInput.value = '';
+        localStorage.setItem('savedName', name);
+      } catch (err) {
+        console.error(err);
+        statusEl.textContent = `エラー: ${err.message}`;
+      }
+    });
+  </script>
+</body>
+</html>
